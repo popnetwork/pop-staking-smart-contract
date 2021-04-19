@@ -48,6 +48,8 @@ describe("PopStaking contract", function () {
 
   context("Staking", function () {
     beforeEach(async function () {
+      await this.pop.transfer(this.pool.address, utils.toWei("1000000"))
+      expect(await this.pop.balanceOf(this.pool.address)).to.equal(utils.toWei("1000000"))
       await this.pop.transfer(this.alice.address, utils.toWei("1000000"))
       expect(await this.pop.balanceOf(this.alice.address)).to.equal(utils.toWei("1000000"))
       await this.pop.transfer(this.bob.address, utils.toWei("1000000"))
@@ -58,8 +60,20 @@ describe("PopStaking contract", function () {
       await this.pop.connect(this.alice).approve(this.pool.address, utils.toWei('1000000'))
       await this.pool.connect(this.alice).deposit(utils.toWei('1000'))
       expect(await this.pop.balanceOf(this.alice.address)).to.equal(utils.toWei("999000"))
+      expect(await this.pool.claimablePop(this.alice.address)).to.equal(0)
       await this.pool.connect(this.alice).withdraw(utils.toWei('1000'))
       expect(await this.pop.balanceOf(this.alice.address)).to.equal(utils.toWei("1000000"))
+    })
+
+    it("should give out POPs only after staking time - 2", async function () {
+      await this.pop.connect(this.alice).approve(this.pool.address, utils.toWei('1000000'))
+      await this.pool.connect(this.alice).deposit(utils.toWei('1000'))
+      expect(await this.pop.balanceOf(this.alice.address)).to.equal(utils.toWei("999000"))
+      await time.increase(10000)
+      await this.pool.connect(this.dev).updatePendingInfo([this.alice.address], [10])
+      expect(await this.pool.claimablePop(this.alice.address)).to.equal(1e13) // 1e3 * 1e9 * 1e1 = 1e13
+      await this.pool.connect(this.alice).withdraw(utils.toWei('1000'))
+      expect(await this.pop.balanceOf(this.alice.address)).to.equal('1000000000010000000000000') // 1000000 POP + 1e13
     })
   })
 });
