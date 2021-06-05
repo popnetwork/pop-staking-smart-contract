@@ -45,6 +45,7 @@ contract PopStaking is Ownable {
     uint256 public startBlock;
     uint256 public startTime;
     uint256 public claimableBlock;
+    uint256 public constant stakeUnit = 50000*1e18;
 
     event Deposit(address indexed user, uint256 amount);
     event Withdraw(address indexed user, uint256 amount);
@@ -94,16 +95,18 @@ contract PopStaking is Ownable {
 
     // Deposit tokens to PopStaking for POP allocation.
     function deposit(uint256 _amount) public {
+        uint256 amount = _amount.sub(_amount % stakeUnit);
+        require(amount >= 50000, "deposit: not good");
         UserInfo storage user = userInfo[msg.sender];
         if (user.amount > 0) {
             uint256 claimable = user.amount.mul(popPerBlock).mul(user.rewardMultiplier).div(1e18);
             safePopTransfer(msg.sender, claimable);
         }
-        pop.transferFrom(address(msg.sender), address(this), _amount);
-        user.amount = user.amount.add(_amount);
+        pop.transferFrom(address(msg.sender), address(this), amount);
+        user.amount = user.amount.add(amount);
         user.lastRewardBlock = block.number;
         user.rewardMultiplier = 0;
-        emit Deposit(msg.sender, _amount);
+        emit Deposit(msg.sender, amount);
     }
 
     // Withdraw tokens from PopStaking.
