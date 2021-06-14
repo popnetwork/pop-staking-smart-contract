@@ -1,15 +1,4 @@
-/* 
-
-website: thepopnetwork.org
-
-██████╗  ████═╗ ██████╗
-██║ ██║ ██║ ██║ ██║ ██║ 
-██████║ ██║ ██║ ██████║ 
-██╔═══╝ ██║ ██║ ██╔═══╝ 
-██║      ████║  ██║     
-╚═╝       ╚══╝  ╚═╝    
-
-*/
+// SPDX-License-Identifier: UNLICENSED
 
 pragma solidity ^0.6.12;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -33,11 +22,8 @@ contract PopStaking is Ownable {
     // Dev address.
     address public devaddr;
     // POP tokens created per block.
-    uint256 public popPerBlock;
-    uint256 public popPerBlockCycleOne;
-    uint256 public popPerBlockCycleTwo;
-    uint256 public popPerBlockCycleThree;
-    uint256 public popPerBlockCycleFour;
+    uint256 [] public popPerBlockAllCycles;
+    uint8 cycleLen;
 
     mapping (address => UserInfo) public userInfo;
     
@@ -59,24 +45,24 @@ contract PopStaking is Ownable {
     ) public {
         pop = _pop;
         devaddr = _devaddr;
-        popPerBlock = 0;
-        popPerBlockCycleOne = _popPerBlock;
-        popPerBlockCycleTwo = _popPerBlock.div(2);
-        popPerBlockCycleThree = _popPerBlock.div(4);
-        popPerBlockCycleFour = _popPerBlock.div(8);
-        startTime = _startTime;
-        if ( startTime <= now && now < startTime + 90 days && popPerBlock != popPerBlockCycleOne) {
-            popPerBlock = popPerBlockCycleOne;
-        } else if ( startTime + 90 days <= now && now < startTime + 180 days && popPerBlock != popPerBlockCycleTwo) {
-            popPerBlock = popPerBlockCycleTwo;
-        } else if ( startTime + 180 days <= now && now < startTime + 270 days && popPerBlock != popPerBlockCycleThree) {
-            popPerBlock = popPerBlockCycleThree;
-        } else if ( startTime + 270 days <= now && now < startTime + 365 days && popPerBlock != popPerBlockCycleFour) {
-            popPerBlock = popPerBlockCycleFour;
+        while (cycleLen < 4) {
+            popPerBlockAllCycles.push(_popPerBlock);
+            _popPerBlock /= 2;
+            cycleLen ++;
         }
+        startTime = _startTime;
         startBlock = block.number; 
         claimableBlock = block.number;
     }
+
+    function getPopPerBlock() public view returns (uint256) {
+        if(block.timestamp < startTime) return 0;
+        
+        uint256 cycle = (block.timestamp - startTime) / 90 days;
+        if(cycle > cycleLen) cycle = cycleLen - 1;
+        return popPerBlockAllCycles[cycle];
+    }
+
 
     // Return reward multiplier over the given _from to _to block.
     function getMultiplier(uint256 _from, uint256 _to) public view returns (uint256) {
@@ -90,7 +76,7 @@ contract PopStaking is Ownable {
     // View function to see pending POPs on frontend.
     function claimablePop(address _user) external view returns (uint256) {
         UserInfo storage user = userInfo[_user];
-        return user.amount.mul(popPerBlock).mul(user.rewardMultiplier).div(1e18);
+        return user.amount.mul(getPopPerBlock()).mul(user.rewardMultiplier).div(1e18);
     }
 
     // Deposit tokens to PopStaking for POP allocation.
@@ -99,7 +85,7 @@ contract PopStaking is Ownable {
         require(amount >= 50000, "deposit: not good");
         UserInfo storage user = userInfo[msg.sender];
         if (user.amount > 0) {
-            uint256 claimable = user.amount.mul(popPerBlock).mul(user.rewardMultiplier).div(1e18);
+            uint256 claimable = user.amount.mul(getPopPerBlock()).mul(user.rewardMultiplier).div(1e18);
             safePopTransfer(msg.sender, claimable);
         }
         pop.transferFrom(address(msg.sender), address(this), amount);
@@ -112,8 +98,9 @@ contract PopStaking is Ownable {
     // Withdraw tokens from PopStaking.
     function withdraw(uint256 _amount) public {
         UserInfo storage user = userInfo[msg.sender];
+        require(user.amount > 0, "withdraw: can’t withdraw 0");
         require(user.amount >= _amount, "withdraw: not good");
-        uint256 claimable = user.amount.mul(popPerBlock).mul(user.rewardMultiplier).div(1e18);
+        uint256 claimable = user.amount.mul(getPopPerBlock()).mul(user.rewardMultiplier).div(1e18);
         safePopTransfer(msg.sender, claimable);
         user.amount = user.amount.sub(_amount);
         user.lastRewardBlock = block.number;
@@ -142,34 +129,16 @@ contract PopStaking is Ownable {
         }
     }
 
-    // Token transfer function.
-    function tokenTransfer(address _to, IERC20 _token, uint256 _amount) public onlyOwner {
-        uint256 tokenBal = _token.balanceOf(address(this));
-        if (_amount > tokenBal) {
-            _token.transfer(_to, tokenBal);
-        } else {
-            _token.transfer(_to, _amount);
-        }
-    }
-
     // Update pending info
     function updatePendingInfo(address[] memory _addresses, uint16[] memory _multiplier) public {
         require(msg.sender == devaddr, "dev: wut?");
         require(_addresses.length == _multiplier.length, "pendingInfo: length?");
-        require(startTime + 365 days >= now, "pendingInfo: rewards over");
-        if ( startTime <= now && now < startTime + 90 days && popPerBlock != popPerBlockCycleOne) {
-            popPerBlock = popPerBlockCycleOne;
-        } else if ( startTime + 90 days <= now && now < startTime + 180 days && popPerBlock != popPerBlockCycleTwo) {
-            popPerBlock = popPerBlockCycleTwo;
-        } else if ( startTime + 180 days <= now && now < startTime + 270 days && popPerBlock != popPerBlockCycleThree) {
-            popPerBlock = popPerBlockCycleThree;
-        } else if ( startTime + 270 days <= now && now < startTime + 365 days && popPerBlock != popPerBlockCycleFour) {
-            popPerBlock = popPerBlockCycleFour;
-        } 
+        
         for (uint i = 0; i < _addresses.length; i++) {
             UserInfo storage user = userInfo[_addresses[i]];
             user.rewardMultiplier = user.rewardMultiplier.add(_multiplier[i]);
         }
+
         claimableBlock = block.number;
     }
     // Update dev address by the previous dev.

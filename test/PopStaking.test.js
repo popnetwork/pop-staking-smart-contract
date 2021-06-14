@@ -41,7 +41,7 @@ describe("PopStaking contract", function () {
     it("Should set correct state variables", async function () {
         expect(await this.pool.devaddr()).to.equal(this.dev.address)
         expect(await this.startTime).to.equal(this.currentTime)
-        expect(await this.pool.popPerBlock()).to.equal(1000000000)
+        expect(await this.pool.getPopPerBlock()).to.equal(1000000000)
     });
 
   });
