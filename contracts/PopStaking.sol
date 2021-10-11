@@ -112,11 +112,12 @@ contract PopStaking is Ownable {
     // Withdraw without caring about rewards. EMERGENCY ONLY.
     function emergencyWithdraw() public {
         UserInfo storage user = userInfo[msg.sender];
-        pop.transfer(address(msg.sender), user.amount);
-        emit EmergencyWithdraw(msg.sender, user.amount);
         user.amount = 0;
         user.lastRewardBlock = block.number;
         user.rewardMultiplier = 0;
+        pop.transfer(address(msg.sender), user.amount);
+        emit EmergencyWithdraw(msg.sender, user.amount);
+        
     }
 
     // Safe pop transfer function, just in case if rounding error causes pool to not have enough POPs.
