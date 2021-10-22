@@ -82,7 +82,6 @@ contract PopStaking is Ownable {
     // Deposit tokens to PopStaking for POP allocation.
     function deposit(uint256 _amount) public {
         uint256 amount = _amount.sub(_amount % stakeUnit);
-        require(amount >= 50000, "deposit: not good");
         UserInfo storage user = userInfo[msg.sender];
         if (user.amount > 0) {
             uint256 claimable = user.amount.mul(getPopPerBlock()).mul(user.rewardMultiplier).div(1e18);
@@ -98,8 +97,7 @@ contract PopStaking is Ownable {
     // Withdraw tokens from PopStaking.
     function withdraw(uint256 _amount) public {
         UserInfo storage user = userInfo[msg.sender];
-        require(user.amount > 0, "withdraw: can’t withdraw 0");
-        require(user.amount >= _amount, "withdraw: not good");
+        require(user.amount > 0 && user.amount >= _amount, "withdraw: not good");
         uint256 claimable = user.amount.mul(getPopPerBlock()).mul(user.rewardMultiplier).div(1e18);
         safePopTransfer(msg.sender, claimable);
         user.amount = user.amount.sub(_amount);
