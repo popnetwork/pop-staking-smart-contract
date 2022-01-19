@@ -2,13 +2,15 @@
 
 pragma solidity ^0.6.12;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+// import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/SafeERC20Upgradeable.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
 
-contract PopStaking is Ownable {
+contract PopStaking is Initializable, OwnableUpgradeable {
     using SafeMath for uint256;
-    using SafeERC20 for IERC20;
+    using SafeERC20Upgradeable for IERC20;
 
     // Info of each user.
     struct UserInfo {
@@ -37,12 +39,13 @@ contract PopStaking is Ownable {
     event Withdraw(address indexed user, uint256 amount);
     event EmergencyWithdraw(address indexed user, uint256 amount);
 
-    constructor(
+    function initialize(
         IERC20 _pop,
         address _devaddr,
         uint256 _startTime,
         uint256 _popPerBlock
-    ) public {
+    ) public initializer {
+        OwnableUpgradeable.__Ownable_init();
         pop = _pop;
         devaddr = _devaddr;
         while (cycleLen < 4) {

@@ -4,6 +4,7 @@ require("dotenv/config")
 require("@nomiclabs/hardhat-etherscan");
 require("hardhat-gas-reporter");
 require("solidity-coverage");
+require('@openzeppelin/hardhat-upgrades');
 
 // This is a sample Hardhat task. To learn how to create your own go to
 // https://hardhat.org/guides/create-task.html
@@ -30,6 +31,14 @@ module.exports = {
     },
     mainnet: {
       url: `https://mainnet.infura.io/v3/${process.env.INFURA_PROJECT_ID}`,
+      accounts: [`0x${process.env.PRIVATE_KEY}`]
+    },
+    bsc: {
+      url: `https://bsc-dataseed.binance.org`,
+      accounts: [`0x${process.env.PRIVATE_KEY}`]
+    },
+    bsctest: {
+      url: `https://data-seed-prebsc-1-s1.binance.org:8545`,
       accounts: [`0x${process.env.PRIVATE_KEY}`]
     }
   },
