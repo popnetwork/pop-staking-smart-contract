@@ -34,6 +34,7 @@ contract PopStaking is Initializable, OwnableUpgradeable {
     uint256 public startTime;
     uint256 public claimableBlock;
     uint256 public constant stakeUnit = 50000*1e18;
+    uint256 public totalStakedAmount;
 
     event Deposit(address indexed user, uint256 amount);
     event Withdraw(address indexed user, uint256 amount);
@@ -94,6 +95,7 @@ contract PopStaking is Initializable, OwnableUpgradeable {
         user.amount = user.amount.add(amount);
         user.lastRewardBlock = block.number;
         user.rewardMultiplier = 0;
+        totalStakedAmount = totalStakedAmount.add(amount);
         emit Deposit(msg.sender, amount);
     }
 
@@ -106,6 +108,7 @@ contract PopStaking is Initializable, OwnableUpgradeable {
         user.amount = user.amount.sub(_amount);
         user.lastRewardBlock = block.number;
         user.rewardMultiplier = 0;
+        totalStakedAmount = totalStakedAmount.sub(_amount);
         pop.transfer(address(msg.sender), _amount);
         emit Withdraw(msg.sender, _amount);
     }
