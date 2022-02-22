@@ -97,6 +97,19 @@ describe("PopStaking contract", function () {
       // await this.pool.connect(this.alice).withdraw(utils.toWei('50000'))
       // expect(await this.pop.balanceOf(this.alice.address)).to.equal('1000000000500000000000000') // 1000000 POP + 1e13
     })
+
+    it("should give out POPs only after staking time - 4", async function () {
+      await this.pool.updatePopPerBlock(500000000)
+      await this.pop.connect(this.alice).approve(this.pool.address, utils.toWei('1000000'))
+      await this.pool.connect(this.alice).deposit(utils.toWei('50000'))
+      expect(await this.pop.balanceOf(this.alice.address)).to.equal(utils.toWei("950000"))
+      await time.increase(10000)
+      await this.pool.connect(this.dev).updatePendingInfo([this.alice.address], [10])
+      expect(await this.pool.claimablePop(this.alice.address)).to.equal(25*1e13) // 1e3 * 1e9 * 1e1 = 1e13
+      await this.pool.connect(this.alice).deposit(0)
+      await this.pool.connect(this.alice).withdraw(utils.toWei('50000'))
+      expect(await this.pop.balanceOf(this.alice.address)).to.equal('1000000000250000000000000') // 1000000 POP + 1e13
+    })
   })
 });
 

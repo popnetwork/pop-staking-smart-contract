@@ -80,7 +80,7 @@ contract PopStaking is Initializable, OwnableUpgradeable {
     // View function to see pending POPs on frontend.
     function claimablePop(address _user) external view returns (uint256) {
         UserInfo storage user = userInfo[_user];
-        return user.amount.mul(getPopPerBlock()).mul(user.rewardMultiplier).div(1e18);
+        return user.amount.mul(popPerBlockAllCycles[0]).mul(user.rewardMultiplier).div(1e18*16);
     }
 
     // Deposit tokens to PopStaking for POP allocation.
@@ -88,7 +88,7 @@ contract PopStaking is Initializable, OwnableUpgradeable {
         uint256 amount = _amount.sub(_amount % stakeUnit);
         UserInfo storage user = userInfo[msg.sender];
         if (user.amount > 0) {
-            uint256 claimable = user.amount.mul(getPopPerBlock()).mul(user.rewardMultiplier).div(1e18);
+            uint256 claimable = user.amount.mul(popPerBlockAllCycles[0]).mul(user.rewardMultiplier).div(1e18*16);
             safePopTransfer(msg.sender, claimable);
         }
         pop.transferFrom(address(msg.sender), address(this), amount);
@@ -103,7 +103,7 @@ contract PopStaking is Initializable, OwnableUpgradeable {
     function withdraw(uint256 _amount) public {
         UserInfo storage user = userInfo[msg.sender];
         require(user.amount > 0 && user.amount >= _amount, "withdraw: not good");
-        uint256 claimable = user.amount.mul(getPopPerBlock()).mul(user.rewardMultiplier).div(1e18);
+        uint256 claimable = user.amount.mul(popPerBlockAllCycles[0]).mul(user.rewardMultiplier).div(1e18*16);
         safePopTransfer(msg.sender, claimable);
         user.amount = user.amount.sub(_amount);
         user.lastRewardBlock = block.number;
@@ -138,10 +138,10 @@ contract PopStaking is Initializable, OwnableUpgradeable {
     function updatePendingInfo(address[] memory _addresses, uint16[] memory _multiplier) public {
         require(msg.sender == devaddr, "dev: wut?");
         require(_addresses.length == _multiplier.length, "pendingInfo: length?");
-        
+        uint divider = popPerBlockAllCycles[0] / getPopPerBlock();
         for (uint i = 0; i < _addresses.length; i++) {
             UserInfo storage user = userInfo[_addresses[i]];
-            user.rewardMultiplier = user.rewardMultiplier.add(_multiplier[i]);
+            user.rewardMultiplier = user.rewardMultiplier.add(_multiplier[i]*16/divider);
         }
 
         claimableBlock = block.number;
@@ -150,5 +150,14 @@ contract PopStaking is Initializable, OwnableUpgradeable {
     function dev(address _devaddr) public {
         require(msg.sender == devaddr, "dev: wut?");
         devaddr = _devaddr;
+    }
+
+    function updatePopPerBlock(uint _popPerBlock) onlyOwner external {
+        cycleLen = 0;
+        while (cycleLen < 4) {
+            popPerBlockAllCycles[cycleLen] = _popPerBlock;
+            _popPerBlock /= 2;
+            cycleLen ++;
+        }
     }
 }
