@@ -70,7 +70,7 @@ contract PopStaking is Initializable, OwnableUpgradeable {
 
 
     // Return reward multiplier over the given _from to _to block.
-    function getMultiplier(uint256 _from, uint256 _to) public view returns (uint256) {
+    function getMultiplier(uint256 _from, uint256 _to) external pure returns (uint256) {
         if (_to <= _from) {
             return 0;
         } else {
@@ -85,7 +85,7 @@ contract PopStaking is Initializable, OwnableUpgradeable {
     }
 
     // Deposit tokens to PopStaking for POP allocation.
-    function deposit(uint256 _amount) public {
+    function deposit(uint256 _amount) external {
         uint256 amount = _amount.sub(_amount % stakeUnit);
         UserInfo storage user = userInfo[msg.sender];
         if (user.amount > 0) {
@@ -101,7 +101,7 @@ contract PopStaking is Initializable, OwnableUpgradeable {
     }
 
     // Withdraw tokens from PopStaking.
-    function withdraw(uint256 _amount) public {
+    function withdraw(uint256 _amount) external {
         UserInfo storage user = userInfo[msg.sender];
         require(user.amount > 0 && user.amount >= _amount, "withdraw: not good");
         uint256 claimable = user.amount.mul(popPerBlockAllCycles[0]).mul(user.rewardMultiplier).div(1e18*16);
@@ -115,7 +115,7 @@ contract PopStaking is Initializable, OwnableUpgradeable {
     }
 
     // Withdraw without caring about rewards. EMERGENCY ONLY.
-    function emergencyWithdraw() public {
+    function emergencyWithdraw() external {
         UserInfo storage user = userInfo[msg.sender];
         uint amount = user.amount;
         user.amount = 0;
@@ -134,7 +134,7 @@ contract PopStaking is Initializable, OwnableUpgradeable {
     }
 
     // Update pending info
-    function updatePendingInfo(address[] memory _addresses, uint16[] memory _multiplier) public {
+    function updatePendingInfo(address[] memory _addresses, uint16[] memory _multiplier) external {
         require(msg.sender == devaddr, "dev: wut?");
         require(_addresses.length == _multiplier.length, "pendingInfo: length?");
         uint divider = popPerBlockAllCycles[0] / getPopPerBlock();
@@ -146,7 +146,7 @@ contract PopStaking is Initializable, OwnableUpgradeable {
         claimableBlock = block.number;
     }
     // Update dev address by the previous dev.
-    function dev(address _devaddr) public {
+    function dev(address _devaddr) external {
         require(_devaddr != address(0), "dev: zero address");
         require(msg.sender == devaddr, "dev: wut?");
         devaddr = _devaddr;
