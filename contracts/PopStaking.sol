@@ -48,6 +48,7 @@ contract PopStaking is Initializable, OwnableUpgradeable {
     ) public initializer {
         OwnableUpgradeable.__Ownable_init();
         pop = _pop;
+        require(_devaddr != address(0), "zero address");
         devaddr = _devaddr;
         while (cycleLen < 4) {
             popPerBlockAllCycles.push(_popPerBlock);
@@ -146,6 +147,7 @@ contract PopStaking is Initializable, OwnableUpgradeable {
     }
     // Update dev address by the previous dev.
     function dev(address _devaddr) public {
+        require(_devaddr != address(0), "dev: zero address");
         require(msg.sender == devaddr, "dev: wut?");
         devaddr = _devaddr;
     }
