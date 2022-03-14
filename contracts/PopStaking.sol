@@ -12,24 +12,24 @@ contract PopStaking is Initializable, OwnableUpgradeable {
     using SafeMath for uint256;
     using SafeERC20Upgradeable for IERC20;
 
-    // Info of each user.
+    /// @notice Info of each user.
     struct UserInfo {
         uint256 amount;     // How many tokens the user has provided.
         uint256 rewardMultiplier; // Reward Block Count.
         uint256 lastRewardBlock;  // Last block number that tokens distribution occurs.
     }
 
-    // The POP TOKEN!
+    /// @notice The POP TOKEN!
     IERC20 public pop;
-    // Dev address.
+    /// @notice Dev address.
     address public devaddr;
-    // POP tokens created per block.
+    /// @notice POP tokens created per block.
     uint256 [] public popPerBlockAllCycles;
     uint8 public cycleLen;
 
     mapping (address => UserInfo) public userInfo;
     
-    // The block number when POP mining starts.
+    /// @notice The block number when POP mining starts.
     uint256 public startBlock;
     uint256 public startTime;
     uint256 public claimableBlock;
@@ -70,7 +70,7 @@ contract PopStaking is Initializable, OwnableUpgradeable {
     }
 
 
-    // Return reward multiplier over the given _from to _to block.
+    /// @notice Return reward multiplier over the given _from to _to block.
     function getMultiplier(uint256 _from, uint256 _to) external pure returns (uint256) {
         if (_to <= _from) {
             return 0;
@@ -79,13 +79,13 @@ contract PopStaking is Initializable, OwnableUpgradeable {
         }
     }
 
-    // View function to see pending POPs on frontend.
+    /// @notice View function to see pending POPs on frontend.
     function claimablePop(address _user) external view returns (uint256) {
         UserInfo storage user = userInfo[_user];
         return user.amount.mul(popPerBlockAllCycles[0]).mul(user.rewardMultiplier).div(1e18*16);
     }
 
-    // Deposit tokens to PopStaking for POP allocation.
+    /// @notice Deposit tokens to PopStaking for POP allocation.
     function deposit(uint256 _amount) external {
         uint256 amount = _amount.sub(_amount % STAKE_UNIT);
         UserInfo storage user = userInfo[msg.sender];
@@ -101,7 +101,7 @@ contract PopStaking is Initializable, OwnableUpgradeable {
         emit Deposit(msg.sender, amount);
     }
 
-    // Withdraw tokens from PopStaking.
+    /// @notice Withdraw tokens from PopStaking.
     function withdraw(uint256 _amount) external {
         UserInfo storage user = userInfo[msg.sender];
         require(_amount > 0 && user.amount > 0 && user.amount >= _amount, "withdraw: not good");
@@ -115,7 +115,7 @@ contract PopStaking is Initializable, OwnableUpgradeable {
         emit Withdraw(msg.sender, _amount);
     }
 
-    // Withdraw without caring about rewards. EMERGENCY ONLY.
+    /// @notice Withdraw without caring about rewards. EMERGENCY ONLY.
     function emergencyWithdraw() external {
         UserInfo storage user = userInfo[msg.sender];
         uint amount = user.amount;
@@ -128,14 +128,14 @@ contract PopStaking is Initializable, OwnableUpgradeable {
         
     }
 
-    // Safe pop transfer function, just in case if rounding error causes pool to not have enough POPs.
+    /// @notice Safe pop transfer function, just in case if rounding error causes pool to not have enough POPs.
     function safePopTransfer(address _to, uint256 _amount) internal {
         uint256 popBal = pop.balanceOf(address(this));
         require(popBal.sub(totalStakedAmount) > _amount, "transfer: not enough reward tokens");
         pop.transfer(_to, _amount);
     }
 
-    // Update pending info
+    /// @notice Update pending info
     function updatePendingInfo(address[] memory _addresses, uint16[] memory _multiplier) external {
         require(msg.sender == devaddr, "dev: wut?");
         require(_addresses.length == _multiplier.length, "pendingInfo: length?");
@@ -147,13 +147,14 @@ contract PopStaking is Initializable, OwnableUpgradeable {
 
         claimableBlock = block.number;
     }
-    // Update dev address by the previous dev.
+    /// @notice Update dev address by the previous dev.
     function dev(address _devaddr) external {
         require(_devaddr != address(0), "dev: zero address");
         require(msg.sender == devaddr, "dev: wut?");
         devaddr = _devaddr;
     }
 
+    /// @notice Update popPerBlock.
     function updatePopPerBlock(uint _popPerBlock) onlyOwner external {
         require(_popPerBlock > 0, "updatePopPerBlock: zero value");
         cycleLen = 0;
