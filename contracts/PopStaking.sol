@@ -128,11 +128,8 @@ contract PopStaking is Initializable, OwnableUpgradeable {
     // Safe pop transfer function, just in case if rounding error causes pool to not have enough POPs.
     function safePopTransfer(address _to, uint256 _amount) internal {
         uint256 popBal = pop.balanceOf(address(this));
-        if (_amount > popBal) {
-            pop.transfer(_to, popBal);
-        } else {
-            pop.transfer(_to, _amount);
-        }
+        require(popBal.sub(totalStakedAmount) > _amount, "transfer: not enough reward tokens");
+        pop.transfer(_to, _amount);
     }
 
     // Update pending info
