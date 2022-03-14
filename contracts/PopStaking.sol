@@ -103,7 +103,7 @@ contract PopStaking is Initializable, OwnableUpgradeable {
     // Withdraw tokens from PopStaking.
     function withdraw(uint256 _amount) external {
         UserInfo storage user = userInfo[msg.sender];
-        require(user.amount > 0 && user.amount >= _amount, "withdraw: not good");
+        require(_amount > 0 && user.amount > 0 && user.amount >= _amount, "withdraw: not good");
         uint256 claimable = user.amount.mul(popPerBlockAllCycles[0]).mul(user.rewardMultiplier).div(1e18*16);
         safePopTransfer(msg.sender, claimable);
         user.amount = user.amount.sub(_amount);
