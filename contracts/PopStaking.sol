@@ -118,6 +118,7 @@ contract PopStaking is Initializable, OwnableUpgradeable {
     function emergencyWithdraw() external {
         UserInfo storage user = userInfo[msg.sender];
         uint amount = user.amount;
+        require(amount > 0, "emergencyWithdraw: no tokens");
         user.amount = 0;
         user.lastRewardBlock = block.number;
         user.rewardMultiplier = 0;
