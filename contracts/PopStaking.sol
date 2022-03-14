@@ -25,7 +25,7 @@ contract PopStaking is Initializable, OwnableUpgradeable {
     address public devaddr;
     // POP tokens created per block.
     uint256 [] public popPerBlockAllCycles;
-    uint8 cycleLen;
+    uint8 public cycleLen;
 
     mapping (address => UserInfo) public userInfo;
     
