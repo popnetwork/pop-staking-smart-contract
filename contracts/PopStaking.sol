@@ -123,6 +123,7 @@ contract PopStaking is Initializable, OwnableUpgradeable {
         user.amount = 0;
         user.lastRewardBlock = block.number;
         user.rewardMultiplier = 0;
+        totalStakedAmount = totalStakedAmount.sub(amount);
         pop.transfer(address(msg.sender), amount);
         emit EmergencyWithdraw(msg.sender, amount);
         
