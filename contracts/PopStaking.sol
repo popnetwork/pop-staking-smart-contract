@@ -33,7 +33,7 @@ contract PopStaking is Initializable, OwnableUpgradeable {
     uint256 public startBlock;
     uint256 public startTime;
     uint256 public claimableBlock;
-    uint256 public constant stakeUnit = 50000*1e18;
+    uint256 public constant STAKE_UNIT = 50000*1e18;
     uint256 public totalStakedAmount;
 
     event Deposit(address indexed user, uint256 amount);
@@ -87,7 +87,7 @@ contract PopStaking is Initializable, OwnableUpgradeable {
 
     // Deposit tokens to PopStaking for POP allocation.
     function deposit(uint256 _amount) external {
-        uint256 amount = _amount.sub(_amount % stakeUnit);
+        uint256 amount = _amount.sub(_amount % STAKE_UNIT);
         UserInfo storage user = userInfo[msg.sender];
         if (user.amount > 0) {
             uint256 claimable = user.amount.mul(popPerBlockAllCycles[0]).mul(user.rewardMultiplier).div(1e18*16);
