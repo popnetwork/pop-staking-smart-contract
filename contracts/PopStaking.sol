@@ -49,6 +49,7 @@ contract PopStaking is Initializable, OwnableUpgradeable {
         OwnableUpgradeable.__Ownable_init();
         pop = _pop;
         require(_devaddr != address(0), "zero address");
+        require(_popPerBlock > 0, "zero value");
         devaddr = _devaddr;
         while (cycleLen < 4) {
             popPerBlockAllCycles.push(_popPerBlock);
@@ -138,7 +139,7 @@ contract PopStaking is Initializable, OwnableUpgradeable {
     function updatePendingInfo(address[] memory _addresses, uint16[] memory _multiplier) external {
         require(msg.sender == devaddr, "dev: wut?");
         require(_addresses.length == _multiplier.length, "pendingInfo: length?");
-        uint divider = popPerBlockAllCycles[0] / getPopPerBlock();
+        uint divider = popPerBlockAllCycles[0].div(getPopPerBlock());
         for (uint i = 0; i < _addresses.length; i++) {
             UserInfo storage user = userInfo[_addresses[i]];
             user.rewardMultiplier = user.rewardMultiplier.add(_multiplier[i]*16/divider);
