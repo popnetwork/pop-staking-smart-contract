@@ -154,6 +154,7 @@ contract PopStaking is Initializable, OwnableUpgradeable {
     }
 
     function updatePopPerBlock(uint _popPerBlock) onlyOwner external {
+        require(_popPerBlock > 0, "updatePopPerBlock: zero value");
         cycleLen = 0;
         while (cycleLen < 4) {
             popPerBlockAllCycles[cycleLen] = _popPerBlock;
