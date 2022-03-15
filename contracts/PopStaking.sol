@@ -69,6 +69,8 @@ contract PopStaking is Initializable, OwnableUpgradeable {
 
 
     /// @notice Return reward multiplier over the given _from to _to block.
+    /// @param _from from block number
+    /// @param _to to block number
     function getMultiplier(uint256 _from, uint256 _to) external pure returns (uint256) {
         if (_to <= _from) {
             return 0;
@@ -78,12 +80,14 @@ contract PopStaking is Initializable, OwnableUpgradeable {
     }
 
     /// @notice View function to see pending POPs on frontend.
+    /// @param _user user address to see pending POPs
     function claimablePop(address _user) external view returns (uint256) {
         UserInfo storage user = userInfo[_user];
         return user.amount.mul(popPerBlockAllCycles[0]).mul(user.rewardMultiplier).div(1e18*16);
     }
 
     /// @notice Deposit tokens to PopStaking for POP allocation.
+    /// @param _amount amount to be deposited
     function deposit(uint256 _amount) external {
         uint256 amount = _amount.sub(_amount % STAKE_UNIT);
         require(amount > 0, "deposit: zero value");
@@ -114,6 +118,7 @@ contract PopStaking is Initializable, OwnableUpgradeable {
     }
 
     /// @notice Withdraw tokens from PopStaking.
+    /// @param _amount amount to be withdrawed
     function withdraw(uint256 _amount) external {
         UserInfo storage user = userInfo[msg.sender];
         require(_amount > 0 && user.amount > 0 && user.amount >= _amount, "withdraw: not good");
@@ -145,6 +150,8 @@ contract PopStaking is Initializable, OwnableUpgradeable {
     }
 
     /// @notice Safe pop transfer function, just in case if rounding error causes pool to not have enough POPs.
+    /// @param _to address to be get POP token
+    /// @param _amount POP token amount to be sent
     function safePopTransfer(address _to, uint256 _amount) internal {
         uint256 popBal = pop.balanceOf(address(this));
         require(popBal.sub(totalStakedAmount) > _amount, "transfer: not enough reward tokens");
@@ -153,6 +160,8 @@ contract PopStaking is Initializable, OwnableUpgradeable {
     }
 
     /// @notice Update pending info
+    /// @param _addresses array of addresses to be updated
+    /// @param _multiplier array of multiplier (block numbers) to be updated
     function updatePendingInfo(address[] memory _addresses, uint16[] memory _multiplier) external {
         require(msg.sender == devaddr, "dev: wut?");
         require(_addresses.length == _multiplier.length, "pendingInfo: length?");
@@ -165,6 +174,7 @@ contract PopStaking is Initializable, OwnableUpgradeable {
         claimableBlock = block.number;
     }
     /// @notice Update dev address by the previous dev.
+    /// @param _devaddr Dev address to be updated.
     function dev(address _devaddr) external {
         require(_devaddr != address(0), "dev: zero address");
         require(msg.sender == devaddr, "dev: wut?");
@@ -172,6 +182,7 @@ contract PopStaking is Initializable, OwnableUpgradeable {
     }
 
     /// @notice Update popPerBlock.
+    /// @param _popPerBlock popPerBlock to be updated.
     function updatePopPerBlock(uint _popPerBlock) onlyOwner external {
         require(_popPerBlock > 0, "updatePopPerBlock: zero value");
         cycleLen = 0;
