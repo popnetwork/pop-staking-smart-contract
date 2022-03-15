@@ -2,14 +2,12 @@
 
 pragma solidity 0.6.12;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC20/SafeERC20Upgradeable.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
 
 contract PopStaking is Initializable, OwnableUpgradeable {
     using SafeMath for uint256;
-    using SafeERC20Upgradeable for IERC20;
 
     /// @notice Info of each user.
     struct UserInfo {
@@ -95,7 +93,8 @@ contract PopStaking is Initializable, OwnableUpgradeable {
             if (claimable > 0)
                 safePopTransfer(msg.sender, claimable);
         }
-        pop.transferFrom(address(msg.sender), address(this), amount);
+        bool success = pop.transferFrom(address(msg.sender), address(this), amount);
+        require(success == true, "deposit: transferFrom failed");
         user.amount = user.amount.add(amount);
         user.lastRewardBlock = block.number;
         user.rewardMultiplier = 0;
@@ -125,7 +124,8 @@ contract PopStaking is Initializable, OwnableUpgradeable {
         user.lastRewardBlock = block.number;
         user.rewardMultiplier = 0;
         totalStakedAmount = totalStakedAmount.sub(_amount);
-        pop.transfer(address(msg.sender), _amount);
+        bool success = pop.transfer(address(msg.sender), _amount);
+        require(success == true, "withdraw: transfer failed");
         emit Withdraw(msg.sender, _amount);
     }
 
@@ -138,7 +138,8 @@ contract PopStaking is Initializable, OwnableUpgradeable {
         user.lastRewardBlock = block.number;
         user.rewardMultiplier = 0;
         totalStakedAmount = totalStakedAmount.sub(amount);
-        pop.transfer(address(msg.sender), amount);
+        bool success = pop.transfer(address(msg.sender), amount);
+        require(success == true, "emergencyWithdraw: transfer failed");
         emit EmergencyWithdraw(msg.sender, amount);
         
     }
@@ -147,7 +148,8 @@ contract PopStaking is Initializable, OwnableUpgradeable {
     function safePopTransfer(address _to, uint256 _amount) internal {
         uint256 popBal = pop.balanceOf(address(this));
         require(popBal.sub(totalStakedAmount) > _amount, "transfer: not enough reward tokens");
-        pop.transfer(_to, _amount);
+        bool success = pop.transfer(_to, _amount);
+        require(success == true, "withdraw: transfer failed");
     }
 
     /// @notice Update pending info
