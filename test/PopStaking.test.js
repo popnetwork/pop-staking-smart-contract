@@ -73,7 +73,7 @@ describe("PopStaking contract", function () {
       await time.increase(10000)
       await this.pool.connect(this.dev).updatePendingInfo([this.alice.address], [10])
       expect(await this.pool.claimablePop(this.alice.address)).to.equal(50*1e13) // 1e3 * 1e9 * 1e1 = 1e13
-      await this.pool.connect(this.alice).deposit(0)
+      await this.pool.connect(this.alice).claim()
       await this.pool.connect(this.alice).withdraw(utils.toWei('50000'))
       expect(await this.pop.balanceOf(this.alice.address)).to.equal('1000000000500000000000000') // 1000000 POP + 1e13
     })
@@ -106,7 +106,7 @@ describe("PopStaking contract", function () {
       await time.increase(10000)
       await this.pool.connect(this.dev).updatePendingInfo([this.alice.address], [10])
       expect(await this.pool.claimablePop(this.alice.address)).to.equal(25*1e13) // 1e3 * 1e9 * 1e1 = 1e13
-      await this.pool.connect(this.alice).deposit(0)
+      await this.pool.connect(this.alice).claim()
       await this.pool.connect(this.alice).withdraw(utils.toWei('50000'))
       expect(await this.pop.balanceOf(this.alice.address)).to.equal('1000000000250000000000000') // 1000000 POP + 1e13
     })

@@ -38,6 +38,7 @@ contract PopStaking is Initializable, OwnableUpgradeable {
 
     event Deposit(address indexed user, uint256 amount);
     event Withdraw(address indexed user, uint256 amount);
+    event Claim(address indexed user, uint256 rewardAmount);
     event EmergencyWithdraw(address indexed user, uint256 amount);
 
     function initialize(
@@ -88,6 +89,7 @@ contract PopStaking is Initializable, OwnableUpgradeable {
     /// @notice Deposit tokens to PopStaking for POP allocation.
     function deposit(uint256 _amount) external {
         uint256 amount = _amount.sub(_amount % STAKE_UNIT);
+        require(amount > 0, "deposit: zero value");
         UserInfo storage user = userInfo[msg.sender];
         if (user.amount > 0) {
             uint256 claimable = user.amount.mul(popPerBlockAllCycles[0]).mul(user.rewardMultiplier).div(1e18*16);
@@ -99,6 +101,16 @@ contract PopStaking is Initializable, OwnableUpgradeable {
         user.rewardMultiplier = 0;
         totalStakedAmount = totalStakedAmount.add(amount);
         emit Deposit(msg.sender, amount);
+    }
+
+    /// @notice Claim reward tokens
+    function claim() external {
+        UserInfo storage user = userInfo[msg.sender];
+        uint256 claimable = user.amount.mul(popPerBlockAllCycles[0]).mul(user.rewardMultiplier).div(1e18*16);
+        safePopTransfer(msg.sender, claimable);
+        user.lastRewardBlock = block.number;
+        user.rewardMultiplier = 0;
+        emit Claim(msg.sender, claimable);
     }
 
     /// @notice Withdraw tokens from PopStaking.
