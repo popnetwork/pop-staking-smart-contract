@@ -93,7 +93,8 @@ contract PopStaking is Initializable, OwnableUpgradeable {
         UserInfo storage user = userInfo[msg.sender];
         if (user.amount > 0) {
             uint256 claimable = user.amount.mul(popPerBlockAllCycles[0]).mul(user.rewardMultiplier).div(1e18*16);
-            safePopTransfer(msg.sender, claimable);
+            if (claimable > 0)
+                safePopTransfer(msg.sender, claimable);
         }
         pop.transferFrom(address(msg.sender), address(this), amount);
         user.amount = user.amount.add(amount);
@@ -107,7 +108,8 @@ contract PopStaking is Initializable, OwnableUpgradeable {
     function claim() external {
         UserInfo storage user = userInfo[msg.sender];
         uint256 claimable = user.amount.mul(popPerBlockAllCycles[0]).mul(user.rewardMultiplier).div(1e18*16);
-        safePopTransfer(msg.sender, claimable);
+        if (claimable > 0)
+            safePopTransfer(msg.sender, claimable);
         user.lastRewardBlock = block.number;
         user.rewardMultiplier = 0;
         emit Claim(msg.sender, claimable);
@@ -118,7 +120,8 @@ contract PopStaking is Initializable, OwnableUpgradeable {
         UserInfo storage user = userInfo[msg.sender];
         require(_amount > 0 && user.amount > 0 && user.amount >= _amount, "withdraw: not good");
         uint256 claimable = user.amount.mul(popPerBlockAllCycles[0]).mul(user.rewardMultiplier).div(1e18*16);
-        safePopTransfer(msg.sender, claimable);
+        if (claimable > 0)
+            safePopTransfer(msg.sender, claimable);
         user.amount = user.amount.sub(_amount);
         user.lastRewardBlock = block.number;
         user.rewardMultiplier = 0;
